@@ -16,19 +16,10 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "author": "Taylor Callsen <taylor.callsen@gmail.com> https://taylor.callsen.me/",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tcallsen/geoCalcLineReferences"
   }
 }
