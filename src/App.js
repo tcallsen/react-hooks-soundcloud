@@ -6,7 +6,7 @@ import loadscript from 'load-script'
 
 function App() {
   
-  // define state
+  // state
 
   // used to communicate between SC widget and React
   const [isPlaying, setIsPlaying] = useState(false)
@@ -25,12 +25,65 @@ function App() {
 
     // use load-script module to load SC Widget API
     loadscript('https://w.soundcloud.com/player/api.js', () => {
+      
+      // initialize player and store reference in state
 
-      console.log('script loaded - ', window.SC)
+      // TODO: replace this with React ref
+      const playerIframe = document.getElementById('sound-cloud-player')
+      const player = window.SC.Widget(playerIframe)
+      setPlayer( player )
+      
+
+      // event handlers for SoundCloud events
+      //  following logic here: https://github.com/CookPete/react-player/blob/master/src/players/SoundCloud.js
+      
+      // NOTE: closure created - cannot access react state or props from within callback function!!
+      
+      const { PLAY, PLAY_PROGRESS, PAUSE, FINISH, ERROR } = window.SC.Widget.Events
+
+      player.bind( PLAY, () => {
+
+        // update backend with play event
+        setIsPlaying(true)
+
+        // check to see if song has changed - if so update state
+        player.getCurrentSoundIndex( (playerPlaylistIndex) => {            
+            setPlaylistIndex(playerPlaylistIndex)
+        })
+    
+      })
+
+      player.bind( PAUSE, () => {
+        // update state if player has paused - event fires false positives so need to double check player is paused
+        player.isPaused( (playerIsPaused) => {
+          if (playerIsPaused) setIsPlaying(false)
+        })
+      })
 
     })
 
-  }, []);
+  }, [])
+
+
+  // integration - update player based on new props/data from backend
+
+  useEffect(() => {
+    
+    // TODO: better way to do this?
+    if (!player) return
+
+    // check if playing state changed
+    player.isPaused( (playerIsPaused) => {
+        
+      if (isPlaying && playerIsPaused) {
+        player.play()
+      } else if (!isPlaying && !playerIsPaused) {
+        player.pause()
+      }
+      
+    })
+    
+  },[isPlaying])
 
   return (
     <div className="App">
@@ -44,7 +97,9 @@ function App() {
 
           <h3>SoundCloud Widget</h3>
 
-          <img src={logo} className="App-logo" alt="logo" />
+          <iframe id="sound-cloud-player" style={{border: 'none', height: 314, width: 400}} scrolling="no" allow="autoplay" 
+            src={ "https://w.soundcloud.com/player/?url=https://soundcloud.com/anjunadeep/sets/cubicolor-hardly-a-day-hardly" }>
+          </iframe>
 
         </div>
       
