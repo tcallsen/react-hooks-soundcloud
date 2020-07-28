@@ -1,12 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react'
 import logo from './logo.svg';
 import './App.css';
 
+import loadscript from 'load-script'
+
 function App() {
   
-  const isPlaying = false
-  const playlistIndex = 0
+  // define state
+
+  // used to communicate between SC widget and React
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [playlistIndex, setPlaylistIndex] = useState(0)
   
+  // populated once SoundCloud Widget API is loaded and initialized
+  const [scLibary, setScLibary] = useState(false)
+  const [player, setPlayer] = useState(false)
+
+ 
+  // initialization - load soundcloud widget API and set event listeners
+
+  useEffect(() => {
+
+    console.log('initial load')
+
+    // use load-script module to load SC Widget API
+    loadscript('https://w.soundcloud.com/player/api.js', () => {
+
+      console.log('script loaded - ', window.SC)
+
+    })
+
+  }, []);
+
   return (
     <div className="App">
       <div className="App-container">
