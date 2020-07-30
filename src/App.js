@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import logo from './logo.svg';
 import './App.css';
 
 import loadscript from 'load-script'
+
+// SoundCloud widget API
+//  https://developers.soundcloud.com/docs/api/html5-widget
 
 function App() {
   
@@ -13,15 +15,12 @@ function App() {
   const [playlistIndex, setPlaylistIndex] = useState(0)
   
   // populated once SoundCloud Widget API is loaded and initialized
-  const [scLibary, setScLibary] = useState(false)
   const [player, setPlayer] = useState(false)
 
  
   // initialization - load soundcloud widget API and set event listeners
 
   useEffect(() => {
-
-    console.log('initial load')
 
     // use load-script module to load SC Widget API
     loadscript('https://w.soundcloud.com/player/api.js', () => {
@@ -37,7 +36,7 @@ function App() {
       // event handlers for SoundCloud events
       //  following logic here: https://github.com/CookPete/react-player/blob/master/src/players/SoundCloud.js
       
-      // NOTE: closure created - cannot access react state or props from within callback function!!
+      // NOTE: closure created - cannot access react state or props from within and SC callback functions!!
       
       const { PLAY, PLAY_PROGRESS, PAUSE, FINISH, ERROR } = window.SC.Widget.Events
 
@@ -48,13 +47,14 @@ function App() {
 
         // check to see if song has changed - if so update state
         player.getCurrentSoundIndex( (playerPlaylistIndex) => {            
-            setPlaylistIndex(playerPlaylistIndex)
+          setPlaylistIndex(playerPlaylistIndex)
         })
     
       })
 
       player.bind( PAUSE, () => {
-        // update state if player has paused - event fires false positives so need to double check player is paused
+        // update state if player has paused
+        //  - need to double check SC player is paused since event fires false positives
         player.isPaused( (playerIsPaused) => {
           if (playerIsPaused) setIsPlaying(false)
         })
@@ -65,12 +65,11 @@ function App() {
   }, [])
 
 
-  // integration - update player based on new props/data from backend
+  // integration - update SC player based on new state (e.g. react section play button click)
 
   useEffect(() => {
     
-    // TODO: better way to do this?
-    if (!player) return
+    if (!player) return // player loaded async - make sure available
 
     // check if playing state changed
     player.isPaused( (playerIsPaused) => {
@@ -85,20 +84,57 @@ function App() {
     
   },[isPlaying])
 
+  useEffect(() => {
+    
+    if (!player) return // player loaded async - make sure available
+
+    // check if playing state changed
+    player.getCurrentSoundIndex( (playerPlaylistIndex) => {            
+      if (playerPlaylistIndex !== playlistIndex)
+      player.skip(playlistIndex)
+    })
+    
+  },[playlistIndex])
+
+
+  // react section button click event handlers (play/next/previous)
+  //  - adjust react component state based on click events
+
+  const togglePlayback = () => {
+    setIsPlaying(!isPlaying)
+  }
+
+  const changePlaylistIndex = (skipForward = true) => {
+
+    // get list of songs from SC widget
+    player.getSounds( (playerSongList) => {      
+      
+      let nextIndex = (skipForward) ? playlistIndex + 1 : playlistIndex - 1
+
+      // ensure index is not set to less than 0 or greater than playlist
+      if (nextIndex < 0) nextIndex = 0
+      else if (nextIndex >= playerSongList.length) nextIndex = playerSongList.length - 1
+
+      setPlaylistIndex(nextIndex)
+
+    })
+
+  }
+
   return (
     <div className="App">
       <div className="App-container">
       
         <h1>SoundCloud Integration with React</h1>
         
-        <p className="limited">The SoundCloud Widget and React Section will be kept in sync using React Hooks.</p>
+        <p className="limited">The SoundCloud Widget and React Section are kept in sync using React Hooks.</p>
         
         <div className="soundcloud-section">
 
           <h3>SoundCloud Widget</h3>
 
           <iframe id="sound-cloud-player" style={{border: 'none', height: 314, width: 400}} scrolling="no" allow="autoplay" 
-            src={ "https://w.soundcloud.com/player/?url=https://soundcloud.com/anjunadeep/sets/cubicolor-hardly-a-day-hardly" }>
+            src={ "https://w.soundcloud.com/player/?url=https://soundcloud.com/aboveandbeyond/sets/we-are-all-we-need-1" }>
           </iframe>
 
         </div>
@@ -111,9 +147,9 @@ function App() {
           <p>Playlist Index: {playlistIndex}</p>
 
           <p>Control via React:</p>
-          <button>{'<'}</button>
-          <button>{ isPlaying ? 'Pause' : 'Play' }</button>
-          <button>{'>'}</button>
+          <button onClick={ () => changePlaylistIndex(false) }>{'<'}</button>
+          <button onClick={ togglePlayback }>{ isPlaying ? 'Pause' : 'Play' }</button>
+          <button onClick={ () => changePlaylistIndex(true) }>{'>'}</button>
 
         </div>
 
