@@ -17,7 +17,8 @@ function App() {
   // populated once SoundCloud Widget API is loaded and initialized
   const [player, setPlayer] = useState(false)
 
-  const iframeRef = createRef();
+  // ref for iframe element - https://reactjs.org/docs/refs-and-the-dom.html
+  const iframeRef = createRef()
  
   // initialization - load soundcloud widget API and set SC event listeners
 
@@ -28,13 +29,12 @@ function App() {
       
       // initialize player and store reference in state
 
-      // retrieve iframe element via React Ref - https://reactjs.org/docs/refs-and-the-dom.html
       const player = window.SC.Widget(iframeRef.current)
       setPlayer( player )
-      
-      // NOTE: closures created - cannot access react state or props from within and SC callback functions!!
-      
+    
       const { PLAY, PLAY_PROGRESS, PAUSE, FINISH, ERROR } = window.SC.Widget.Events
+
+      // NOTE: closures created - cannot access react state or props from within and SC callback functions!!
 
       player.bind( PLAY, () => {
 
@@ -60,7 +60,7 @@ function App() {
   }, [])
 
 
-  // integration - update SC player based on new state (e.g. play button in react section was click)
+  // integration - update SC player based on new state (e.g. play button in React section was click)
 
   // adjust playback in SC player to match isPlaying state
   useEffect(() => {
@@ -89,8 +89,8 @@ function App() {
   },[playlistIndex])
 
 
-  // react section button click event handlers (play/next/previous)
-  //  - adjust react component state based on click events
+  // React section button click event handlers (play/next/previous)
+  //  - adjust React component state based on click events
 
   const togglePlayback = () => {
     setIsPlaying(!isPlaying)
