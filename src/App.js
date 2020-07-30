@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, createRef } from 'react'
 import './App.css';
 
 import loadscript from 'load-script'
@@ -8,7 +8,6 @@ import loadscript from 'load-script'
 
 function App() {
   
-
   // state
 
   // used to communicate between SC widget and React
@@ -18,6 +17,7 @@ function App() {
   // populated once SoundCloud Widget API is loaded and initialized
   const [player, setPlayer] = useState(false)
 
+  const iframeRef = createRef();
  
   // initialization - load soundcloud widget API and set SC event listeners
 
@@ -28,9 +28,8 @@ function App() {
       
       // initialize player and store reference in state
 
-      // TODO: replace this with React ref
-      const playerIframe = document.getElementById('sound-cloud-player')
-      const player = window.SC.Widget(playerIframe)
+      // retrieve iframe element via React Ref - https://reactjs.org/docs/refs-and-the-dom.html
+      const player = window.SC.Widget(iframeRef.current)
       setPlayer( player )
       
       // NOTE: closures created - cannot access react state or props from within and SC callback functions!!
@@ -126,7 +125,7 @@ function App() {
 
           <h3>SoundCloud Widget</h3>
 
-          <iframe id="sound-cloud-player" style={{border: 'none', height: 314, width: 400}} scrolling="no" allow="autoplay" 
+          <iframe ref={iframeRef} id="sound-cloud-player" style={{border: 'none', height: 314, width: 400}} scrolling="no" allow="autoplay" 
             src={ "https://w.soundcloud.com/player/?url=https://soundcloud.com/aboveandbeyond/sets/we-are-all-we-need-1" }>
           </iframe>
 
