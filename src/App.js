@@ -8,6 +8,7 @@ import loadscript from 'load-script'
 
 function App() {
   
+
   // state
 
   // used to communicate between SC widget and React
@@ -18,7 +19,7 @@ function App() {
   const [player, setPlayer] = useState(false)
 
  
-  // initialization - load soundcloud widget API and set event listeners
+  // initialization - load soundcloud widget API and set SC event listeners
 
   useEffect(() => {
 
@@ -32,29 +33,24 @@ function App() {
       const player = window.SC.Widget(playerIframe)
       setPlayer( player )
       
-
-      // event handlers for SoundCloud events
-      //  following logic here: https://github.com/CookPete/react-player/blob/master/src/players/SoundCloud.js
-      
-      // NOTE: closure created - cannot access react state or props from within and SC callback functions!!
+      // NOTE: closures created - cannot access react state or props from within and SC callback functions!!
       
       const { PLAY, PLAY_PROGRESS, PAUSE, FINISH, ERROR } = window.SC.Widget.Events
 
       player.bind( PLAY, () => {
 
-        // update backend with play event
+        // update state to playing
         setIsPlaying(true)
 
-        // check to see if song has changed - if so update state
+        // check to see if song has changed - if so update state with next index
         player.getCurrentSoundIndex( (playerPlaylistIndex) => {            
-          setPlaylistIndex(playerPlaylistIndex)
+          if (playerPlaylistIndex !== playlistIndex) setPlaylistIndex(playerPlaylistIndex)
         })
     
       })
 
       player.bind( PAUSE, () => {
-        // update state if player has paused
-        //  - need to double check SC player is paused since event fires false positives
+        // update state if player has paused - must double check isPaused since false positives
         player.isPaused( (playerIsPaused) => {
           if (playerIsPaused) setIsPlaying(false)
         })
@@ -65,33 +61,30 @@ function App() {
   }, [])
 
 
-  // integration - update SC player based on new state (e.g. react section play button click)
+  // integration - update SC player based on new state (e.g. play button in react section was click)
 
+  // adjust playback in SC player to match isPlaying state
   useEffect(() => {
     
     if (!player) return // player loaded async - make sure available
 
-    // check if playing state changed
     player.isPaused( (playerIsPaused) => {
-        
       if (isPlaying && playerIsPaused) {
         player.play()
       } else if (!isPlaying && !playerIsPaused) {
         player.pause()
       }
-      
     })
     
   },[isPlaying])
 
+  // adjust seleted song in SC player playlist if playlistIndex state has changed
   useEffect(() => {
     
     if (!player) return // player loaded async - make sure available
 
-    // check if playing state changed
     player.getCurrentSoundIndex( (playerPlaylistIndex) => {            
-      if (playerPlaylistIndex !== playlistIndex)
-      player.skip(playlistIndex)
+      if (playerPlaylistIndex !== playlistIndex) player.skip(playlistIndex)
     })
     
   },[playlistIndex])
@@ -108,7 +101,7 @@ function App() {
 
     // get list of songs from SC widget
     player.getSounds( (playerSongList) => {      
-      
+
       let nextIndex = (skipForward) ? playlistIndex + 1 : playlistIndex - 1
 
       // ensure index is not set to less than 0 or greater than playlist
@@ -143,12 +136,12 @@ function App() {
 
           <h3>React Section</h3>
 
-          <p>isPlaying: {isPlaying ? 'true' : 'false'}</p>
+          <p>isPlaying: { (isPlaying) ? 'true' : 'false'}</p>
           <p>Playlist Index: {playlistIndex}</p>
 
           <p>Control via React:</p>
           <button onClick={ () => changePlaylistIndex(false) }>{'<'}</button>
-          <button onClick={ togglePlayback }>{ isPlaying ? 'Pause' : 'Play' }</button>
+          <button onClick={ togglePlayback }>{ (isPlaying) ? 'Pause' : 'Play' }</button>
           <button onClick={ () => changePlaylistIndex(true) }>{'>'}</button>
 
         </div>
