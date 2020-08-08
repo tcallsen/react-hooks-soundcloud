@@ -43,7 +43,7 @@ function App() {
 
         // check to see if song has changed - if so update state with next index
         player.getCurrentSoundIndex( (playerPlaylistIndex) => {            
-          if (playerPlaylistIndex !== playlistIndex) setPlaylistIndex(playerPlaylistIndex)
+          setPlaylistIndex(playerPlaylistIndex)
         })
     
       })
